@@ -1,15 +1,3 @@
-"""
-Sample workload that triggers multiple stages & jobs.
-
-spark-submit \
-  --master spark://spark-master:7077 \
-  --deploy-mode client \
-  --driver-memory 2G \
-  --executor-memory 2G \
-  --executor-cores 2 \
-  --conf spark.sql.shuffle.partitions=8 \
-  /workspace/spark_app.py
-"""
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, sum as _sum, countDistinct
 import time
