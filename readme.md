@@ -61,6 +61,14 @@ Execute the PySpark script using `docker exec` to run `spark-submit` inside the 
 docker exec -it spark-master \
   spark-submit \
     --master spark://spark-master:7077 \
+    --conf spark.jars.ivy=/home/spark/.ivy2 \
+    /workspace/simple_test.py
+```
+
+```bash
+docker exec -it spark-master \
+  spark-submit \
+    --master spark://spark-master:7077 \
     --deploy-mode client \
     --driver-memory 2G \
     --executor-memory 2G \
