@@ -1,0 +1,78 @@
+version: "3.9"
+
+volumes:
+  spark-workspace:
+
+services:
+  spark-data-loader:
+    image: busybox
+    volumes:
+      - ./workspace:/host-workspace
+      - spark-workspace:/workspace
+    command: sh -c "cp -r /host-workspace/. /workspace/ && chmod -R 777 /workspace"
+
+  spark-master:
+    image: bitnami/spark:3.4
+    user: "1001"
+    volumes:
+      - spark-workspace:/workspace
+    depends_on:
+      spark-data-loader:
+        condition: service_completed_successfully
+    container_name: spark-master
+    hostname: spark-master
+    environment:
+      - SPARK_MODE=master
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_MASTER_PORT=7077
+      - SPARK_HISTORY_OPTS=-Dspark.history.fs.logDirectory=/workspace/spark-events -Dspark.eventLog.enabled=true -Dspark.eventLog.dir=/workspace/spark-events
+    ports:
+      - "7077:7077"
+      - "8080:8080"
+
+  spark-worker-1:
+    image: bitnami/spark:3.4
+    user: "1001"
+    volumes:
+      - spark-workspace:/workspace
+    depends_on:
+      - spark-master
+    container_name: spark-worker-1
+    hostname: spark-worker-1
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_CORES=2
+      - SPARK_WORKER_MEMORY=2G
+
+  spark-worker-2:
+    image: bitnami/spark:3.4
+    user: "1001"
+    volumes:
+      - spark-workspace:/workspace
+    depends_on:
+      - spark-master
+    container_name: spark-worker-2
+    hostname: spark-worker-2
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_CORES=2
+      - SPARK_WORKER_MEMORY=2G
+
+  history-server:
+    image: bitnami/spark:3.4
+    user: "1001"
+    volumes:
+      - spark-workspace:/workspace
+    depends_on:
+      spark-data-loader:
+        condition: service_completed_successfully
+    container_name: history-server
+    hostname: history-server
+    environment:
+      - SPARK_HISTORY_OPTS=-Dspark.history.fs.logDirectory=/workspace/spark-events
+    command: >
+      bash -c "/opt/bitnami/spark/sbin/start-history-server.sh && tail -f /dev/null"
+    ports:
+      - "18080:18080"
