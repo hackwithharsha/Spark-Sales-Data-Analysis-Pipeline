@@ -168,3 +168,28 @@ Now for the most important part: how to use this information.
 3.  **Analyze the Stages:** Click on the **Description** of your slowest job. This will take you to the "Stages" view for that job. Here, look for:
     * **Shuffle Read / Write:** Large amounts of shuffle data indicate an expensive, wide transformation (like `groupBy`, `join`, `orderBy`). This is a common source of performance issues.
     * **Task Skew:** Look at the table of tasks at the bottom of the stage page. If one or two tasks take much, much longer than the others (the "Max" duration is far from the "Median"), you have **data skew**. This means one of your partitions is overloaded. You can often fix this by `repartition()`ing your data on a different key.
+
+## Spotify Data Example
+
+```bash
+# To generate fake Spotify data
+>>> python3 spotify_data.py
+```
+
+````bash
+docker exec -it spark-master \
+  spark-submit \
+    --master spark://spark-master:7077 \
+    --deploy-mode client \
+    --driver-memory 2G \
+    --executor-memory 2G \
+    --executor-cores 2 \
+    --conf spark.sql.shuffle.partitions=8 \
+    --conf spark.jars.ivy=/home/spark/.ivy2 \
+    --conf spark.eventLog.enabled=true \
+    --conf spark.eventLog.dir=/workspace/spark-events \
+    --conf "spark.hadoop.hadoop.security.authentication=simple" \
+    --conf "spark.driver.extraJavaOptions=-DHADOOP_USER_NAME=spark" \
+    --conf "spark.executor.extraJavaOptions=-DHADOOP_USER_NAME=spark" \
+    /workspace/spotify_app.py
+```
