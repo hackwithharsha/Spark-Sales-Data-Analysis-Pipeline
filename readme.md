@@ -50,7 +50,7 @@ Follow these steps to set up the environment and run the Spark application.
 This command will start the Spark master, workers, and the History Server.
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 ### Step 3: Run the Spark Application
